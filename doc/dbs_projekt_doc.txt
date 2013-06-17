@@ -1,0 +1,260 @@
+Bemerkung:
+	Laut der Aufgabenstellung wäre die Reihenfolge folgendermaßen:
+		1. Definition und Dokumentation des für die zu lösende Aufgabe notwendign Schemas
+		2. Anlegen des Schemas mittels der DDL-Befehle in SQL
+		3. Importieren der Daten aus den gegebenen Quellen
+		4. Transformieren der gegebenen Daten ins eigene Schema
+	Das ist in so fern ungünstig, dass das Zielschema, bzw. die darin modellierten Entitäten und Attribute aus den Quelldaten herleitbar oder konstruierbar sein müssen. Das Zielschema ist also abhängig vor Struktur der Quelldaten. Also wählen wir eine andere Reihenfolge:
+		1. Importieren der Quelldaten
+		2. Analyse der Quelldaten (dokumentieren des Quellschemas)
+		3. Definition und Dokumentation des Zielschemas
+		4. Überführen der Daten aus dem Quellschema ins Zielschema (wo möglich mittels "Views")
+
+1. Importieren der Quelldaten
+2 Quellen:
+	wetterdaten ( .. )
+	opengeodb ( .. )
+
+Die Quelldaten liegen zunächst als *.sql-Dateien vor. Das heißt sie beinhalten SQL-Befehle in Textform, deren Ausführung theoretisch das Schema erzeugt (DDL), und/oder die Datensätze einliest (DML). Beide Datenbanken sind in MySQL. Wir nutzen PostgreSQL. Beim Einlesen der Daten in PostgreSQL treten folgende Probleme auf:
+
+Allgemeine Probleme:
+	SQL-Datentypen:
+		MySQL benutzt teilweise Angaben zu Datentypen, die PostgreSQL nicht unterstützt. Beispiele:
+		int(5) steht in MySQL für die maximale Anzeigebreite
+		double steht in MySQL for einen besonders präzisen gleitkommatyp
+		Lösung:
+			<typ>(5) => <typ>
+			double => double precision
+	Falsche Reihenfolge der DDL-Befehle (create table, ...)
+		Wenn Tabelle A auf Tabelle B verweist, so muss beim Erzeugen der Tabellen zuerst Tabelle B erzeugt werden, DANN Tabelle A. Die vorliegenden .sql-Dateien erfüllen teilweise nicht diese Regeln.
+	MySQL-Spezifische SQL-Erweiterungen:
+		der Befehl "USE ..."
+
+Die folgenden Abschnitte 1.1 und 1.2 listen die für Quelldaten-Import notwendigen Dateien auf.
+Änderungen anzeigen:
+	colordiff -y <alte Datei> <neue Datei> | less -r
+
+1.1 wetterdaten
+	nur Datendefinitionen: dd.sql
+		Importbefehl: sudo -u <nutzername> psql -f dd.sql &> wetter_dd.error_log > wetter_dd.log
+		Log des Imports:
+			wetter_dd.log
+			wetter_dd.error_log
+	nur Datenmanipulation: dm.sql
+		Importbefehl: sudo -u <nutzername> psql -f dm.sql &> wetter_dm.error_log > wetter_dm.log
+		Log des Imports:
+			wetter_log_dm.log
+			wetter_error_dm.log
+	Ursprungsdaten: 2013-06-11_wetterdaten.sql
+	Erklärung: die Ursprungsdaten enthalten sowohl DDL- als auch DML-Befehle, und außerdem "Backticks" (`). Diese lassen sich mit folgendem Befehl entfernen:
+		cat 2012-06-11_wetterdaten.sql | grep "s/`//g" > wetterdaten2_noBackticks.sql
+	Außerdem haben wir den Befehl "USE .." eliminiert, so wie die Reihenfolge der DDL-Befehle korrigiert, und die Datei aufgeteilt in dd.sql, so wie dm.sql
+
+1.2 opengeodb
+	Die für den Import notwendigen Daten heißen (Syntax: korrigierte Fassung <- ursprüngliche Fassung (bemerkung) ):
+	Datendefinitionen: opengeodb-begin2.sql 
+		Importbefehl: sudo -u <nutzername> psql -f opengeodb-begin2.sql &> geodb_dd.error_log > geodb_dd.log
+		log: geodb_dd.log
+		fehler: geodb_dd.error_log
+	DML für Geo-Informationen über Deutschland: DE2.sql
+		Importbefehl: sudo -u <nutzername> psql -f DE2.sql &> geodb_de2.error_log > geodb_de2.log
+		log: geodb_de2.log
+		fehler: geodb_de2.error_log
+	Erstellt die Tabelle geodb_type_names und einige Indizes, für die schnellere Suche: opengeodb-end.sql
+		Importbefehl: sudo -u <nutzername> psql -f opengeodb-end.sql &> geodb_end.error_log > geodb_end.log
+		log: geodb_end.log
+		error_log: geodb_end.error_log
+
+	1. Datendefinitionen
+		Ursprungsdatei: opengeodb-begin.sql
+		ohne komische Angaben und komplizierte check constraints: opengeodb-begin2.sql
+	2. Datenmanipulation:
+		2.1. Haupsächliche Daten
+		Ursprungsdate: DE.sql
+			log: geodb_de.log
+			fehler: geodb_de.error_log
+		korrektur: DE2.sql
+			cat DE.sql | sed 's/\(INSERT INTO geodb_floatdata[[:space:]]\+VALUES([0-9]\+,[0-9]\+,[0-9.]\+,\)0/\1null/' > DE2.sql
+		2.2. geodb_type_names und indizes
+			Keine Änderungen notwendig, ursprüngliches Skript funktionert.
+			Ursprungsdaten: opengeodb-end.sql
+
+2. Analyse der Quelldaten (dokumentieren des Quellschemas)
+2.1 wetterdaten:
+
+Wettermessung( stations_id, datum, qualitaet, min_5cm, min_2m, mittel_2m, max_2m, relative_feuchte, mittel_windstaerke, max_windgeschwindigkeit, sonnenscheindauer, mittel_bedeckungsgrad, niederschlagshoehe, mittel_luftdruck )
+	Constraints:
+		stations_id, Datum: PRIMARY KEY
+		stations_id: FOREIGN KEY REFERENCES Wetterstation(s_id)
+Wetterstation( s_id, standort, geo_breite, geo_laenge, hoehe, betreiber )
+	Constraints:
+		s_id: PRIMARY KEY
+		standort: NOT NULL
+
+2.2 opengeodb
+
+geodb_locations( c_id, loc_type)
+	Constraints:
+		loc_id: PRIMARY_KEY, NOT NULL
+		loc_type: NOT NULL, CHECK (100100000 or 100200000 or 100300000 or 100400000 or 100500000 or 100600000 or 100700000 or 100800000 or 100900000 or 101000000 or 1)
+	Bemerkung:
+		Über loc_type kann ermittelt werden, ob es sich um eine Stadt (oder z.B. ein Bundesland) handelt. loc_type referenziert einen Eintrag in geodb_type_names.
+
+geodb_coordinates( loc_id, coord_type, lat, lon, coord_subtype, valid_since, date_type_since, valid_until, date_type_until )
+	Constraints:
+		loc_id: FOREIGN KEY REFERENCES geodb_locations(loc_id), NOT NULL
+		coord_type: NOT NULL, CHECK (=200100000)
+		valid_until: NOT NULL
+		date_type_until: NOT NULL
+	Bemerkung:
+		Hier finden wir den geographische Längen- und Breitengrad für eine "Location".
+geodb_textdata( loc_id, text_type, text_val, text_locale, is_native_lang, is_default_name, valid_since, date_type_since, valid_until, date_type_until)
+	Constraints:
+	Bemerkung:
+		Alle Text-Daten, die zu einer "Location" gespeichert sind, finden sich hier. 
+		loc_id zeigt auf die "Location",
+		text_val beinhaltet den eigentlichen Text,
+		text_type zeigt auf die Tabelle geodb_type_names, und besagt welcher "Art" die Information ist (name der Location, ...)
+		
+geodb_type_names( type_id, type_locale, name )
+	Constraints:
+		type_id, type_locale: UNIQUE
+	Bemerkung:
+		Die "Art" einer Location (siehe geodb_locations.loc_type) lässt sich hier nachschlagen. Außerdem:
+		Alle gespeicherten Angaben zu einer Location finden sich in den Tabellen geodb_textdata (geodb_intdata und geodb_floatdata). Welche Eigenschaft einer "Location" ein Datum beschreibt, lässt sich durch Nachschlagen in dieser Tabelle feststellen.
+
+Die folgenden Tabellen sind für unsere Anwendung unwichtig, und werden ab jetzt ignoriert:
+// nicht wichtig - laut der opendgeodb-Doku handelt es sich nur experimentelle Daten:
+geodb_hierarchies( loc_id, level, id_lvl1, id_lvl2, id_lvl3, id_lvl4, id_lvl5, id_lvl6, id_lvl7, id_lvl8, id_lvl9, valid_since, date_type_since, valid_until, date_type_until )
+	loc_id: REFERENCES geodb_locations (loc_id)
+	level: NOT NULL, CHECK (>0 and <=9)
+	id_lvl1: NOT NULL
+	valid_until: NOT NULL
+	date_type_until: NOT NULL
+	komplizerter CHECK:
+		level=	| id_lvl
+			| 1  2  3  4  5  6  7  8  9
+		------------------------------------
+		1	| ?, 0, ...		  0
+		2	| +, ?, 0, ...		  0
+		3	| +, +, 0, ...		  0
+		4	| +, +, +, 0, ...	  0
+		5	| +, +, +, +, ?, 0, ...   0
+		6	| +, +, +, +, +, ?, 0, ...
+		7	| +, +, +, +, +, +, ?, 0, 0
+		8	| +, +, +, +, +, +, +, ?, 0
+		9	| +, +, +, +, +, +, +, +, ?
+
+geodb_floatdata( )
+geodb_intdata( )
+
+3. Definition und Dokumentation des Zielschemas
+Jetzt definieren wir das Schema, das wir für unsere Aufgabe benötigen. Das Wissen über die Quelldaten (insbesondere das Verständnis über die relativ komplexe Strukture der opengeodb) hilft uns, ein Schema zu finden, das sich aus den Quelldaten gewinnen lässt:
+
+4. Transformieren ins eigene Schema:
+	folgende Relationen müssen erzeugt werden:
+	dbsp_wetterstation
+	dbsp_wettermessung
+	dbsp_stadt
+	dbsp_relevantfor
+4.1 dbsp_wetterstation
+	Quellschema: Wetterstation( s_id, standort, geo_breite, geo_laenge, hoehe, betreiber )
+	Zielschema: dbsp_wetterstation( station_id, laenge, breite)
+	SQL-Abfrage zum Erzeugen eines "Views" aus dem Quellschema:
+		create or replace view dbsp_wetterstation
+		as
+		select s_id as station_id, geo_laenge as laenge, geo_breite as breite
+		from wetterstation
+		;
+
+4.2 dbsp_wettermessung
+	Quellschema: Wettermessung( stations_id, datum, qualitaet, min_5cm, min_2m, mittel_2m, max_2m, relative_feuchte, mittel_windstaerke, max_windgeschwindigkeit, sonnenscheindauer, mittel_bedeckungsgrad, niederschlagshoehe, mittel_luftdruck )
+	Zielschema: dbsp_wettermessung( station_id, datum, ...)
+		create or replace view dbsp_wettermessung
+		as
+		select stations_id as station_id, datum, qualitaet, min_5cm, min_2m, mittel_2m, max_2m, relative_feuchte, mittel_windstaerke, max_windgeschwindigkeit, sonnenscheindauer, mittel_bedeckungsgrad, niederschlagshoehe, mittel_luftdruck
+		from wettermessung
+		;
+
+4.3 dbsp_stadt
+Wir müssen irgendwie herausfinden, welche "Locations" Städte sind
+	Vorarbeit:
+		Welche Arten von Locations gibt es in der opengeodb?
+			select tn.type_id, tn.name, count(*) as amountfrom geodb_locations as l                     
+			left join geodb_type_names as tn ON l.loc_type = tn.type_idgroup by tn.type_id, tn.name;
+			  type_id  |         name          | amount 
+			-----------+-----------------------+--------
+			 100200000 | Staat/Land            |      1
+			 100300000 | Kanton                |     16
+			 100800000 | Postleitzahlgebiet    |  44443
+			 100500000 | Landkreis             |    439
+			 100400000 | Regierungsbezirk      |     32
+			 100700000 | Ortschaft             |   3729
+			 100600000 | Politische Gliederung |  12249
+			 100300000 | Bundesland            |     16
+			 100900000 | Ortsteil              |     90
+			 (9 rows)
+		Was ist eigentlich eine Stadt?
+		(test anhand von Oberammergau:)
+			select loc.loc_id, loc_type, type.name
+			from geodb_locations as loc
+			right join (select loc_id from geodb_textdata where text_val = 'Oberammergau') as text on loc.loc_id = text.loc_id
+			left join geodb_type_names as type on loc.loc_type = type.type_id ;
+			 loc_id | loc_type  |         name          
+			--------+-----------+-----------------------
+			  21855 | 100600000 | Politische Gliederung
+			(1 row)
+		Jetzt wissen wir: für Oberammergau ist der "loc_type" == 100600000, das heißt die Art der "Location" ist "Politische Gliederung". Dies sollte auf andere Städte auch zutreffen, also haben wir jetzt ein Kriterium, um Städte (u.U. auch ein par Locations von "ähnlichem" Typ) herauszufiltern:
+			select loc.loc_id, text.text_val
+			from geodb_locations as loc
+			join geodb_textdata as text on text.loc_id = loc.loc_id
+			where loc.loc_type = 100600000 /* typ: Politische Gliederung */
+			and text.text_type = 500100000 /* der name der location*/
+			;
+
+			 loc_id |              text_val              
+			--------+------------------------------------
+			  13349 | Leienkaul
+			  13350 | Aach (Hegau)
+			  13351 | Aach bei Trier
+			  13352 | Aachen
+			  13353 | Aalen (Württemberg)
+			  13354 | Aarbergen
+			  13355 | Aasbüttel
+			  13356 | Abbenrode bei Wernigerode
+			  13357 | Abberode
+			  13358 | Abenberg, Mittelfranken
+			  13359 | Abensberg, Hallertau
+			  13360 | Abentheuer
+			  13361 | Absberg
+			  13362 | Abstatt
+			  13363 | Abtlöbnitz
+			  13364 | Abtsbessingen
+			  13365 | Abtsdorf bei Wittenberg
+			  13366 | Abtsgmünd
+			  13367 | Abtsteinach
+			  13368 | Abtswind
+			  13369 | Abtweiler
+			  13370 | Achberg bei Lindau, Bodensee
+			  13371 | Achern (Baden)
+			  [...]
+	Zu jedem Eintrag in der Tabelle wollen wir die geographische Länge und Breite wissen, also erweitern wir die obige Abfrage:
+			select loc.loc_id, text.text_val as name, coord.lon as länge, coord.lat as breite
+			from geodb_locations as loc
+			join geodb_textdata as text on text.loc_id = loc.loc_id
+			join geodb_coordinates as coord on coord.loc_id = loc.loc_id
+			where loc.loc_type = 100600000 /* typ: Politische Gliederung */
+			and text.text_type = 500100000 /* der name der location*/
+			;
+	Um die Daten in das eigene Schema zu überführen, definieren wir uns ein "View", aus der obigen Abfrage. Dabei benennen wir die Attribute entsprechend unserem Schema um:
+			create or replace view dbsp_stadt
+			as
+			select loc.loc_id as stadt_id, text.text_val as name, coord.lon as laenge, coord.lat as breite
+			from geodb_locations as loc
+			join geodb_textdata as text on text.loc_id = loc.loc_id
+			join geodb_coordinates as coord on coord.loc_id = loc.loc_id
+			where loc.loc_type = 100600000 /* typ: Politische Gliederung */
+			and text.text_type = 500100000 /* der name der location*/
+			;
+
+4.4 dbsp_relevantfor

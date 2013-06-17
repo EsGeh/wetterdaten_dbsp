@@ -1,0 +1,3 @@
+psql:opengeodb-begin2.sql:19: NOTICE:  CREATE TABLE / UNIQUE will create implicit index "geodb_type_names_type_id_type_locale_key" for table "geodb_type_names"
+psql:opengeodb-begin2.sql:34: NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "geodb_locations_pkey" for table "geodb_locations"
+psql:opengeodb-begin2.sql:209: NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "geodb_changelog_pkey" for table "geodb_changelog"

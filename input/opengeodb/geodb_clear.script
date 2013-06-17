@@ -1,0 +1,10 @@
+USER=dbs_project
+
+sudo -u $USER psql -c 'delete from geodb_changelog where true'
+sudo -u $USER psql -c 'delete from geodb_coordinates where true'
+sudo -u $USER psql -c 'delete from geodb_floatdata where true'
+sudo -u $USER psql -c 'delete from geodb_hierarchies where true'
+sudo -u $USER psql -c 'delete from geodb_intdata where true'
+sudo -u $USER psql -c 'delete from geodb_textdata where true'
+sudo -u $USER psql -c 'delete from geodb_type_names where true'
+sudo -u $USER psql -c 'delete from geodb_locations where true'

@@ -1,0 +1,2 @@
+psql:dd.sql:9: NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "wetterstation_pkey" for table "wetterstation"
+psql:dd.sql:28: NOTICE:  CREATE TABLE / PRIMARY KEY will create implicit index "wettermessung_pkey" for table "wettermessung"
