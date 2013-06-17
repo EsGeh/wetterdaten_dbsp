@@ -82,74 +82,75 @@ Die folgenden Abschnitte 1.1 und 1.2 listen die für Quelldaten-Import notwendig
 2. Analyse der Quelldaten (dokumentieren des Quellschemas)
 2.1 wetterdaten:
 
-Wettermessung( stations_id, datum, qualitaet, min_5cm, min_2m, mittel_2m, max_2m, relative_feuchte, mittel_windstaerke, max_windgeschwindigkeit, sonnenscheindauer, mittel_bedeckungsgrad, niederschlagshoehe, mittel_luftdruck )
-	Constraints:
-		stations_id, Datum: PRIMARY KEY
-		stations_id: FOREIGN KEY REFERENCES Wetterstation(s_id)
-Wetterstation( s_id, standort, geo_breite, geo_laenge, hoehe, betreiber )
-	Constraints:
-		s_id: PRIMARY KEY
-		standort: NOT NULL
+	Wettermessung( stations_id, datum, qualitaet, min_5cm, min_2m, mittel_2m, max_2m, relative_feuchte, mittel_windstaerke, max_windgeschwindigkeit, sonnenscheindauer, mittel_bedeckungsgrad, niederschlagshoehe, mittel_luftdruck )
+		Constraints:
+			stations_id, Datum: PRIMARY KEY
+			stations_id: FOREIGN KEY REFERENCES Wetterstation(s_id)
+	Wetterstation( s_id, standort, geo_breite, geo_laenge, hoehe, betreiber )
+		Constraints:
+			s_id: PRIMARY KEY
+			standort: NOT NULL
 
 2.2 opengeodb
 
-geodb_locations( c_id, loc_type)
-	Constraints:
-		loc_id: PRIMARY_KEY, NOT NULL
-		loc_type: NOT NULL, CHECK (100100000 or 100200000 or 100300000 or 100400000 or 100500000 or 100600000 or 100700000 or 100800000 or 100900000 or 101000000 or 1)
-	Bemerkung:
-		Über loc_type kann ermittelt werden, ob es sich um eine Stadt (oder z.B. ein Bundesland) handelt. loc_type referenziert einen Eintrag in geodb_type_names.
+	geodb_locations( c_id, loc_type)
+		Constraints:
+			loc_id: PRIMARY_KEY, NOT NULL
+			loc_type: NOT NULL, CHECK (100100000 or 100200000 or 100300000 or 100400000 or 100500000 or 100600000 or 100700000 or 100800000 or 100900000 or 101000000 or 1)
+		Bemerkung:
+			Über loc_type kann ermittelt werden, ob es sich um eine Stadt (oder z.B. ein Bundesland) handelt. loc_type referenziert einen Eintrag in geodb_type_names.
 
-geodb_coordinates( loc_id, coord_type, lat, lon, coord_subtype, valid_since, date_type_since, valid_until, date_type_until )
-	Constraints:
-		loc_id: FOREIGN KEY REFERENCES geodb_locations(loc_id), NOT NULL
-		coord_type: NOT NULL, CHECK (=200100000)
+	geodb_coordinates( loc_id, coord_type, lat, lon, coord_subtype, valid_since, date_type_since, valid_until, date_type_until )
+		Constraints:
+			loc_id: FOREIGN KEY REFERENCES geodb_locations(loc_id), NOT NULL
+			coord_type: NOT NULL, CHECK (=200100000)
+			valid_until: NOT NULL
+			date_type_until: NOT NULL
+		Bemerkung:
+			Hier finden wir den geographische Längen- und Breitengrad für eine "Location".
+	geodb_textdata( loc_id, text_type, text_val, text_locale, is_native_lang, is_default_name, valid_since, date_type_since, valid_until, date_type_until)
+		Constraints:
+		Bemerkung:
+			Alle Text-Daten, die zu einer "Location" gespeichert sind, finden sich hier. 
+			loc_id zeigt auf die "Location",
+			text_val beinhaltet den eigentlichen Text,
+			text_type zeigt auf die Tabelle geodb_type_names, und besagt welcher "Art" die Information ist (name der Location, ...)
+			
+	geodb_type_names( type_id, type_locale, name )
+		Constraints:
+			type_id, type_locale: UNIQUE
+		Bemerkung:
+			Die "Art" einer Location (siehe geodb_locations.loc_type) lässt sich hier nachschlagen. Außerdem:
+			Alle gespeicherten Angaben zu einer Location finden sich in den Tabellen geodb_textdata (geodb_intdata und geodb_floatdata). Welche Eigenschaft einer "Location" ein Datum beschreibt, lässt sich durch Nachschlagen in dieser Tabelle feststellen.
+
+	Die folgenden Tabellen sind für unsere Anwendung unwichtig, und werden ab jetzt ignoriert:
+	// nicht wichtig - laut der opendgeodb-Doku handelt es sich nur experimentelle Daten:
+	geodb_hierarchies( loc_id, level, id_lvl1, id_lvl2, id_lvl3, id_lvl4, id_lvl5, id_lvl6, id_lvl7, id_lvl8, id_lvl9, valid_since, date_type_since, valid_until, date_type_until )
+		loc_id: REFERENCES geodb_locations (loc_id)
+		level: NOT NULL, CHECK (>0 and <=9)
+		id_lvl1: NOT NULL
 		valid_until: NOT NULL
 		date_type_until: NOT NULL
-	Bemerkung:
-		Hier finden wir den geographische Längen- und Breitengrad für eine "Location".
-geodb_textdata( loc_id, text_type, text_val, text_locale, is_native_lang, is_default_name, valid_since, date_type_since, valid_until, date_type_until)
-	Constraints:
-	Bemerkung:
-		Alle Text-Daten, die zu einer "Location" gespeichert sind, finden sich hier. 
-		loc_id zeigt auf die "Location",
-		text_val beinhaltet den eigentlichen Text,
-		text_type zeigt auf die Tabelle geodb_type_names, und besagt welcher "Art" die Information ist (name der Location, ...)
-		
-geodb_type_names( type_id, type_locale, name )
-	Constraints:
-		type_id, type_locale: UNIQUE
-	Bemerkung:
-		Die "Art" einer Location (siehe geodb_locations.loc_type) lässt sich hier nachschlagen. Außerdem:
-		Alle gespeicherten Angaben zu einer Location finden sich in den Tabellen geodb_textdata (geodb_intdata und geodb_floatdata). Welche Eigenschaft einer "Location" ein Datum beschreibt, lässt sich durch Nachschlagen in dieser Tabelle feststellen.
+		komplizerter CHECK:
+			level=	| id_lvl
+				| 1  2  3  4  5  6  7  8  9
+			------------------------------------
+			1	| ?, 0, ...		  0
+			2	| +, ?, 0, ...		  0
+			3	| +, +, 0, ...		  0
+			4	| +, +, +, 0, ...	  0
+			5	| +, +, +, +, ?, 0, ...   0
+			6	| +, +, +, +, +, ?, 0, ...
+			7	| +, +, +, +, +, +, ?, 0, 0
+			8	| +, +, +, +, +, +, +, ?, 0
+			9	| +, +, +, +, +, +, +, +, ?
 
-Die folgenden Tabellen sind für unsere Anwendung unwichtig, und werden ab jetzt ignoriert:
-// nicht wichtig - laut der opendgeodb-Doku handelt es sich nur experimentelle Daten:
-geodb_hierarchies( loc_id, level, id_lvl1, id_lvl2, id_lvl3, id_lvl4, id_lvl5, id_lvl6, id_lvl7, id_lvl8, id_lvl9, valid_since, date_type_since, valid_until, date_type_until )
-	loc_id: REFERENCES geodb_locations (loc_id)
-	level: NOT NULL, CHECK (>0 and <=9)
-	id_lvl1: NOT NULL
-	valid_until: NOT NULL
-	date_type_until: NOT NULL
-	komplizerter CHECK:
-		level=	| id_lvl
-			| 1  2  3  4  5  6  7  8  9
-		------------------------------------
-		1	| ?, 0, ...		  0
-		2	| +, ?, 0, ...		  0
-		3	| +, +, 0, ...		  0
-		4	| +, +, +, 0, ...	  0
-		5	| +, +, +, +, ?, 0, ...   0
-		6	| +, +, +, +, +, ?, 0, ...
-		7	| +, +, +, +, +, +, ?, 0, 0
-		8	| +, +, +, +, +, +, +, ?, 0
-		9	| +, +, +, +, +, +, +, +, ?
-
-geodb_floatdata( )
-geodb_intdata( )
+	geodb_floatdata( )
+	geodb_intdata( )
 
 3. Definition und Dokumentation des Zielschemas
 Jetzt definieren wir das Schema, das wir für unsere Aufgabe benötigen. Das Wissen über die Quelldaten (insbesondere das Verständnis über die relativ komplexe Strukture der opengeodb) hilft uns, ein Schema zu finden, das sich aus den Quelldaten gewinnen lässt:
+	(siehe ER-Diagramm im Wohnzimmer)
 
 4. Transformieren ins eigene Schema:
 	folgende Relationen müssen erzeugt werden:
