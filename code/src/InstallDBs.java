@@ -18,9 +18,23 @@ public class InstallDBs {
         String userName,
         String password
     )
-    {
+    {   List<String> tablelist = connection.getExistingTables();
 
+        if (! tablelist.contains("Wetterstation") && ! tablelist.contains("Wettermessung"))
+        {
+            dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"dd.sql");
+            dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"dm.sql");
+        }
 
+        if (   ! tablelist.contains("geodb_type_names") && ! tablelist.contains("geodb_locations")
+            && ! tablelist.contains("geodb_hierarchies") && ! tablelist.contains("geodb_coordinates")
+            && ! tablelist.contains("geodb_textdata") && ! tablelist.contains("geodb_intdata")
+            && ! tablelist.contains("geodb_floatdata") && ! tablelist.contains("geodb_changelog"))
+        {
+            dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"opengeodb-begin2.sql");
+            dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"DE2.sql");
+            dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"opengeodb-end.sql");
+        }
     }
 
     public void dynamicimport(SQLConnection connection,
@@ -33,8 +47,8 @@ public class InstallDBs {
                               String fileName
     )
     {
-        List<String> tablelist = connection.getExistingTables();
-    	if (tablelist.contains("")){
+
+
             try {
                 String line;
                 Process p = Runtime.getRuntime().exec
@@ -52,6 +66,6 @@ public class InstallDBs {
             }
 
 
-        }
+
     }
 }
