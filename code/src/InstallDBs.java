@@ -9,6 +9,5 @@ import java.sql.DatabaseMetaData;
  */
 public class InstallDBs {
     public void exec(SQLConnection connection)     {
-        DatabaseMetaData meta =
     }
 }

@@ -1,7 +1,10 @@
 import java.sql.Connection;
-import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 public class SQLConnection {
@@ -50,6 +53,32 @@ public class SQLConnection {
 				throw new CouldNotCloseException("connection could not be closed: " + e.getMessage());
 			}
 		}
+	}
+	public List<String> getExistingTables()
+	{
+		List<String> result = new ArrayList<String>();
+		try
+		{
+	        DatabaseMetaData meta = connection.getMetaData();
+	        ResultSet tables = meta.getTables(null, null, null, new String[] { "TABLES" } );
+	        while( tables.next() )
+	        {
+	        	result.add( tables.getString("TABLE_NAME") );
+	        }
+		}
+		catch( Exception e)
+		{
+			System.out.println("ERROR: exception: " + e.getMessage());
+		}
+		return result;
+	}
+	public void createTable(String tableName, String sqlFileToFillTableFrom)
+	{
+		
+	}
+	public ResultSet query(String sqlQuery)
+	{
+		// to do
 	}
 	private Connection connection;
 	public class CouldNotLoadDriverException extends Exception {
