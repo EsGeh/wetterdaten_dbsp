@@ -19,7 +19,7 @@ public class SQLConnection {
 		}
 		catch(Exception e)
 		{
-			throw new CouldNotLoadDriverException();
+			throw new CouldNotLoadDriverException(e.getMessage());
 		}
 		connection = null;
 		try
@@ -52,7 +52,12 @@ public class SQLConnection {
 		}
 	}
 	private Connection connection;
-	public class CouldNotLoadDriverException extends Exception { };
+	public class CouldNotLoadDriverException extends Exception {
+		public CouldNotLoadDriverException(String msg)
+		{
+			super(msg);
+		}
+	};
 	public class DatabaseConnectionException extends Exception {
 		public DatabaseConnectionException(String msg) {
 			super(msg);
