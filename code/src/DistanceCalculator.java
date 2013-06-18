@@ -6,7 +6,7 @@
  * To change this template use File | Settings | File Templates.
  */
 public class DistanceCalculator {
-    static double erdradius = 6378.1366; // IERS 2003
+    static final double erdradius = 6378.1366; // IERS 2003
     public static double distance(double lat1, double lon1, double lat2, double lon2){
 
         double dist_lat = (lat2-lat1) * Math.PI/180;

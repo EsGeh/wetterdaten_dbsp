@@ -1,4 +1,5 @@
 import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Scanner;
 import java.io.*;
@@ -66,7 +67,19 @@ public class InstallDBs {
             dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"opengeodb/DE2.sql");
             dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"opengeodb/opengeodb-end.sql");
         }
+
+        try {
+            connection.query("create or replace view dbsp_wetterstation\n" +
+                            "as\n" +
+                            "select s_id as station_id, geo_laenge as laenge, geo_breite as breite\n" +
+                            "from wetterstation\n" +
+                            ";");
+        }
+        catch(SQLException e){
+            System.out.println("dbsp_wetterstation view konnte nicht erzeugt werden: "+e.getMessage());
+        }
     }
+
 
     public void dynamicimport(SQLConnection connection,
                               String path,
