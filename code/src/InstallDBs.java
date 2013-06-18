@@ -1,5 +1,6 @@
 import java.sql.DatabaseMetaData;
 import java.util.List;
+import java.util.Scanner;
 import java.io.*;
 
 /**
@@ -19,14 +20,25 @@ public class InstallDBs {
         String password
     )
     {
-    	//List<String> tablelist = connection.getExistingTables();
-        /*for (String current:tablelist){
-            System.out.println("current:"+current);
-        }*/
+		PrintStream out = System.out;
+		Scanner in = new Scanner(System.in).useDelimiter("\n");
 
         if (!connection.tableExist("WETTERSTATION") || !connection.tableExist("WETTERMESSUNG"))
         {
-        	System.out.println("Lese Wetterdaten ein!");
+        	out.println("Die Wetterdaten sind nicht eingelesen jetzt einlesen ( = 1 Tasse Kaffee)? (y/n)");
+        	int answer = -1;
+        	do {
+        		if( in.next().equals("y") ) { answer = 1; }
+        		else if( in.next().equals("n") ) { answer = 0; }
+        		else { 
+        			out.println("invalid input!");
+        		}
+        	}
+        	while(answer == -1);
+        	if( answer == 0)
+        		System.exit(0);
+        	
+        	System.out.println("INFO: Lese Wetterdaten ein!");
             dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"wetterdaten/dd.sql");
             dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"wetterdaten/dm.sql");
         }
@@ -36,9 +48,20 @@ public class InstallDBs {
             || !connection.tableExist("geodb_textdata") || !connection.tableExist("geodb_intdata")
             || !connection.tableExist("geodb_floatdata") || !connection.tableExist("geodb_changelog"))
         {
-            System.out.println("Lese Geodaten ein!");
-
-
+        	out.println("Die Geodaten sind nicht eingelesen. Jetzt einlesen ( = sehr viele Tasse Kaffee)? (y/n)");
+        	int answer = -1;
+        	do {
+        		if( in.next().equals("y") ) { answer = 1; }
+        		else if( in.next().equals("n") ) { answer = 0; }
+        		else { 
+        			out.println("invalid input!");
+        		}
+        	}
+        	while(answer == -1);
+        	if( answer == 0)
+        		System.exit(0);
+        	
+            System.out.println("INFO: Lese Geodaten ein!");
             dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"opengeodb/opengeodb-begin2.sql");
             dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"opengeodb/DE2.sql");
             dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"opengeodb/opengeodb-end.sql");
@@ -55,25 +78,20 @@ public class InstallDBs {
                               String fileName
     )
     {
-
-
-            try {
-                String line;
-                Process p = Runtime.getRuntime().exec
-                        ("psql -U "+userName+"-d "+databaseName+" -h "+serverURL+" -f "+path+fileName);
-                BufferedReader input =
-                        new BufferedReader
-                                (new InputStreamReader(p.getInputStream()));
-                while ((line = input.readLine()) != null) {
-                    System.out.println(line);
-                }
-                input.close();
+        try {
+            String line;
+            Process p = Runtime.getRuntime().exec
+            		("psql -U "+userName+"-d "+databaseName+" -h "+serverURL+" -f "+path+fileName);
+            BufferedReader input =
+                    new BufferedReader
+                    	(new InputStreamReader(p.getInputStream()));
+            while ((line = input.readLine()) != null) {
+                System.out.println(line);
             }
-            catch (Exception err) {
-                err.printStackTrace();
-            }
-
-
-
+            input.close();
+        }
+        catch (Exception err) {
+            err.printStackTrace();
+        }
     }
 }
