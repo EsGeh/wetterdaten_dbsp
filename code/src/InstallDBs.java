@@ -125,7 +125,7 @@ public class InstallDBs {
             connection.update("create table dbsp_relevantfor(" +
                     "station_id int NOT NULL," +
                     "stadt_id int NOT NULL," +
-                    "distance double precision NOT NULL," +
+                    "distance double precision," +
                     "PRIMARY KEY(station_id,stadt_id)" +
                     //"FOREIGN KEY(station_id)," +
                     //"FOREIGN KEY(stadt_id)" +
@@ -135,6 +135,8 @@ public class InstallDBs {
         catch(SQLException e){
             System.out.println("dbsp_relevantfor konnte nicht erstellt werden! "+e.getMessage());
         }
+
+
     }
 
 
