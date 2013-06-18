@@ -81,6 +81,7 @@ public class InstallDBs {
         }
         catch(SQLException e){
             System.out.println("dbsp_wetterstation view konnte nicht erzeugt werden: "+e.getMessage());
+            System.exit(1);
         }
         //erstelle den wettervermessungview
         try {
@@ -92,6 +93,7 @@ public class InstallDBs {
         }
         catch(SQLException e){
             System.out.println("dbsp_wettermessung view konnte nicht erzeugt werden: "+e.getMessage());
+            System.exit(1);
         }
         //erstelle den stadtview
         try {
@@ -107,6 +109,7 @@ public class InstallDBs {
         }
         catch(SQLException e){
             System.out.println("dbsp_stadt view konnte nicht erzeugt werden: "+e.getMessage());
+            System.exit(1);
         }
 
         try {
@@ -116,9 +119,23 @@ public class InstallDBs {
         }
         catch(SQLException e){
             System.out.println("tables aus views konnten nicht erstellt werden:"+e.getMessage());
+            System.exit(1);
         }
-
-
+        // erstelle constraints, für die aus den Views erzeugten Tabellen:
+        try {
+        	connection.update(
+        		"ALTER TABLE dbsp_wetterstation\n" +
+        		"ADD PRIMARY KEY (station_id) ;"
+        	);
+        	connection.update(
+        		"ALTER TABLE dbsp_stadt\n" +
+        		"ADD PRIMARY KEY (stadt_id) ;"
+        	);
+        }
+        catch(SQLException e){
+            System.out.println("die Notwendigen Konstraints konnten nicht erstellt werden :"+e.getMessage());
+            System.exit(1);
+        }
 
         //erstelle die Kreuzprodukttabelle
         try {
@@ -135,6 +152,7 @@ public class InstallDBs {
         }
         catch(SQLException e){
             System.out.println("dbsp_relevantfor konnte nicht erstellt werden! "+e.getMessage());
+            System.exit(1);
         }
 
         //füge die kreuzproduktinhalte ein
@@ -148,10 +166,8 @@ public class InstallDBs {
         }
         catch(SQLException e){
             System.out.println("kreuzproduktwerte konnten nicht erstellt werden! "+e.getMessage());
+            System.exit(1);
         }
-
-
-
     }
 
 
