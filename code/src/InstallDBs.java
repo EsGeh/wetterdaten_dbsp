@@ -19,12 +19,26 @@ public class InstallDBs {
         String password
     )
     {
-    	List<String> tablelist = connection.getExistingTables();
+
+
+    }
+
+    public void dynamicimport(SQLConnection connection,
+                              String path,
+                              String serverURL,
+                              String serverPort,
+                              String databaseName,
+                              String userName,
+                              String password,
+                              String fileName
+    )
+    {
+        List<String> tablelist = connection.getExistingTables();
     	if (tablelist.contains("")){
             try {
                 String line;
                 Process p = Runtime.getRuntime().exec
-                        ("psql -U "+userName+"-d "+databaseName+" -h "+serverURL+" -f "+path+"dd.sql");
+                        ("psql -U "+userName+"-d "+databaseName+" -h "+serverURL+" -f "+path+fileName);
                 BufferedReader input =
                         new BufferedReader
                                 (new InputStreamReader(p.getInputStream()));
@@ -36,6 +50,7 @@ public class InstallDBs {
             catch (Exception err) {
                 err.printStackTrace();
             }
+
 
         }
     }
