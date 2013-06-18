@@ -34,7 +34,7 @@ public class WeatherForCity {
 		PrintStream out = System.out;
 		Scanner in = new Scanner(System.in).useDelimiter("\n");
 		out.print("please enter a city:\n\t");
-		return in.next();
+		return in.next().trim();
 	}
 	private ResultSet lookUpCity(String cityName) throws SQLException {
 		PreparedStatement stmt = null;

@@ -28,11 +28,13 @@ public class InstallDBs {
         	out.println("Die Wetterdaten sind nicht eingelesen jetzt einlesen ( = 1 Tasse Kaffee)? (y/n)");
         	int answer = -1;
         	do {
-        		if( in.next().equals("y") ) { answer = 1; }
-        		else if( in.next().equals("n") ) { answer = 0; }
-        		else { 
+        		String userInput = in.nextLine();
+        		if( userInput.trim().equals("y"))
+        			answer = 1;
+        		else if( userInput.trim().equals("n"))
+        			answer = 0;
+        		else
         			out.println("invalid input!");
-        		}
         	}
         	while(answer == -1);
         	if( answer == 0)
@@ -51,13 +53,15 @@ public class InstallDBs {
         	out.println("Die Geodaten sind nicht eingelesen. Jetzt einlesen ( = sehr viele Tasse Kaffee)? (y/n)");
         	int answer = -1;
         	do {
-        		if( in.next().equals("y") ) { answer = 1; }
-        		else if( in.next().equals("n") ) { answer = 0; }
-        		else { 
+        		String userInput = in.nextLine();
+        		if( userInput.trim().equals("y"))
+        			answer = 1;
+        		else if( userInput.trim().equals("n"))
+        			answer = 0;
+        		else
         			out.println("invalid input!");
-        		}
         	}
-        	while(answer == -1);
+        	while( answer == -1);
         	if( answer == 0)
         		System.exit(0);
         	
