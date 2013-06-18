@@ -1,4 +1,4 @@
-
+psql -U dbs_project -c "drop table dbsp_relevantfor;"
 psql -U dbs_project -c "drop view dbsp_stadt_view;"
 psql -U dbs_project -c "drop view dbsp_wettermessung_view;"
 psql -U dbs_project -c "drop view dbsp_wetterstation_view;"
