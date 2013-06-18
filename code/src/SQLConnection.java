@@ -100,12 +100,27 @@ public class SQLConnection {
 		return null;
 	}*/
 	// use non-prepared statements:
+	// if your query does not have a result set (e.g. CREATE ...), use SQLConnection.update(...) instead
 	public ResultSet query(String sqlQuery) throws SQLException
 	{
 		try
 		{
 			Statement stmt = connection.createStatement();
 			return stmt.executeQuery(sqlQuery);
+		}
+		catch(SQLException e)
+		{
+			throw e;
+		}
+	}
+	// executes an update query (one that has no result set)
+	// returns the number of updates
+	public int update(String sqlQuery) throws SQLException
+	{
+		try
+		{
+			Statement stmt = connection.createStatement();
+			return stmt.executeUpdate(sqlQuery);
 		}
 		catch(SQLException e)
 		{
