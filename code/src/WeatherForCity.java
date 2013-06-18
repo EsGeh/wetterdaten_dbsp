@@ -13,7 +13,7 @@ public class WeatherForCity {
 	public void exec()
 	{
 		PrintStream out = System.out;
-		String stadt_name = getCityName();
+		String stadt_name = askUserForCity();
 		try {
 			ResultSet set = lookUpCity(stadt_name);
 			if( !set.next() )
@@ -30,27 +30,25 @@ public class WeatherForCity {
 			out.println("ERROR: unable to look up city: " + e.getMessage());
 		}
 	}
-	private String getCityName() {
+	private String askUserForCity() {
 		PrintStream out = System.out;
 		Scanner in = new Scanner(System.in).useDelimiter("\n");
 		out.print("please enter a city:\n\t");
 		return in.next().trim();
 	}
 	private ResultSet lookUpCity(String cityName) throws SQLException {
+		ResultSet townSet = lookupWithOneVariable(queryToGetTown, cityName);
+	}
+	private ResultSet lookupWithOneVariable(String query, String var) throws SQLException
+	{
 		PreparedStatement stmt = null;
 		try
 		{
 			stmt = connection.prepareStmt(
-					queryToGetTown
+				query
 			);
-		}
-		catch(SQLException e)
-		{
-			throw e;
-		}
-		try
-		{
-			stmt.setString( 1, cityName );
+			
+			stmt.setString( 1, var );
 			ResultSet set = stmt.executeQuery();
 			return set;
 		}
