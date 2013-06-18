@@ -131,11 +131,25 @@ public class InstallDBs {
                     "FOREIGN KEY(stadt_id) REFERENCES dbsp_stadt(stadt_id)" +
                     ")" +
                     ";");
-            //connection
+
         }
         catch(SQLException e){
             System.out.println("dbsp_relevantfor konnte nicht erstellt werden! "+e.getMessage());
         }
+
+        //füge die kreuzproduktinhalte ein
+        try {
+            connection.update("Insert into " +
+                    "dbsp_relevantfor (station_id,stadt_id) values " +
+                    "((select station_id from dbsp_wetterstation)" +
+                    "CROSS JOIN " +
+                    "(select stadt_id from dbsp_stadt));");
+
+        }
+        catch(SQLException e){
+            System.out.println("kreuzproduktwerte konnten nicht erstellt werden! "+e.getMessage());
+        }
+
 
 
     }
