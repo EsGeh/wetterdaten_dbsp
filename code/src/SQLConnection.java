@@ -67,10 +67,6 @@ public class SQLConnection {
 				"limit 1\n" +
 				";"
 			);
-			/*PreparedStatement stmt = prepareStmt(
-			);
-			stmt.setString(1, tableName);
-			stmt.executeQuery();*/
 			return true;
 		}
 		catch(Exception e)
