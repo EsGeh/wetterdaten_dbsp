@@ -60,10 +60,10 @@ public class InstallDBs {
             try {
                 String line;
                 Process p = Runtime.getRuntime().exec
-                        ("psql -U "+userName+"-d "+databaseName+" -h "+serverURL+" -f "+path+fileName);
+                        ("psql -U "+userName+" -d "+databaseName+" -h "+serverURL+" -f "+path+fileName);
                 BufferedReader input =
                         new BufferedReader
-                                (new InputStreamReader(p.getInputStream()));
+                                (new InputStreamReader(p.getErrorStream()));
                 while ((line = input.readLine()) != null) {
                     System.out.println(line);
                 }
