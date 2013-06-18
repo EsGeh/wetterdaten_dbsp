@@ -1,7 +1,7 @@
 
-psql -c "drop view dbsp_stadt_view;"
-psql -c "drop view dbsp_wettermessung_view;"
-psql -c "drop view dbsp_wetterstation_view;"
-psql -c "drop table dbsp_stadt;"
-psql -c "drop table dbsp_wettermessung;"
-psql -c "drop table dbsp_wetterstation;"
+psql -U dbs_project -c "drop view dbsp_stadt_view;"
+psql -U dbs_project -c "drop view dbsp_wettermessung_view;"
+psql -U dbs_project -c "drop view dbsp_wetterstation_view;"
+psql -U dbs_project -c "drop table dbsp_stadt;"
+psql -U dbs_project -c "drop table dbsp_wettermessung;"
+psql -U dbs_project -c "drop table dbsp_wetterstation;"
