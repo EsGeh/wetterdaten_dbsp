@@ -20,10 +20,14 @@ public class InstallDBs {
     )
     {   List<String> tablelist = connection.getExistingTables();
 
+        for (String current:tablelist){
+            System.out.println("current:"+current);
+        }
+
         if (! tablelist.contains("Wetterstation") && ! tablelist.contains("Wettermessung"))
-        {
-            dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"dd.sql");
-            dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"dm.sql");
+        {   System.out.println("Lese Wetterdaten ein!");
+            dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"wetterdaten/dd.sql");
+            dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"wetterdaten/dm.sql");
         }
 
         if (   ! tablelist.contains("geodb_type_names") && ! tablelist.contains("geodb_locations")
@@ -31,9 +35,12 @@ public class InstallDBs {
             && ! tablelist.contains("geodb_textdata") && ! tablelist.contains("geodb_intdata")
             && ! tablelist.contains("geodb_floatdata") && ! tablelist.contains("geodb_changelog"))
         {
-            dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"opengeodb-begin2.sql");
-            dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"DE2.sql");
-            dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"opengeodb-end.sql");
+            System.out.println("Lese Geodaten ein!");
+
+
+            dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"opengeodb/opengeodb-begin2.sql");
+            dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"opengeodb/DE2.sql");
+            dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"opengeodb/opengeodb-end.sql");
         }
     }
 
