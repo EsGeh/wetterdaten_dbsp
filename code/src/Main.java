@@ -13,8 +13,11 @@ public class Main {
 	public static void main(String[] args) {
 		SQLConnection conn = createConnection();
 		{
-			WeatherForCity w = new WeatherForCity(conn);
-			w.exec();
+            InstallDBs installer = new InstallDBs();
+            installer.exec(conn,args[0], serverURL,serverPort,databaseName,userName,password);
+
+            WeatherForCity w = new WeatherForCity(conn);
+            w.exec();
 		}
 		closeConnection(conn);
 	}
