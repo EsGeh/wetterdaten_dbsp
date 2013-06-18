@@ -9,5 +9,7 @@ import java.sql.DatabaseMetaData;
  */
 public class InstallDBs {
     public void exec(SQLConnection connection)     {
+    	List<String> connection.getExistingTables();
+    	for 
     }
 }

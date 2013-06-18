@@ -1,8 +1,10 @@
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -72,13 +74,35 @@ public class SQLConnection {
 		}
 		return result;
 	}
-	public void createTable(String tableName, String sqlFileToFillTableFrom)
-	{
-		
-	}
+	// use non-prepared statements:
 	public ResultSet query(String sqlQuery)
 	{
-		// to do
+		try
+		{
+			Statement stmt = connection.createStatement();
+			return stmt.executeQuery(sqlQuery);
+		}
+		catch(Exception e)
+		{
+			// todo: throw exception
+			return null;
+		}
+	}
+	/* prepare a prepared statment.
+	 * a PreparedStatement can contain variables, set them using PreparedStatement.set<Typ>()
+	 * execute them using PreparedStatement.executeQuery()
+	 */
+	public PreparedStatement prepareStmt(String sqlQueryWithVariables)
+	{
+		try
+		{
+			return connection.prepareStatement(sqlQueryWithVariables);
+		}
+		catch(Exception e)
+		{
+			// todo: throw exception
+			return null;
+		}
 	}
 	private Connection connection;
 	public class CouldNotLoadDriverException extends Exception {
