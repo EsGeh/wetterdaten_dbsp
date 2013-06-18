@@ -18,22 +18,23 @@ public class InstallDBs {
         String userName,
         String password
     )
-    {   List<String> tablelist = connection.getExistingTables();
-
-        for (String current:tablelist){
+    {
+    	//List<String> tablelist = connection.getExistingTables();
+        /*for (String current:tablelist){
             System.out.println("current:"+current);
-        }
+        }*/
 
-        if (! tablelist.contains("Wetterstation") && ! tablelist.contains("Wettermessung"))
-        {   System.out.println("Lese Wetterdaten ein!");
+        if (!connection.tableExist("Wetterstation") || !connection.tableExist("Wettermessung"))
+        {
+        	System.out.println("Lese Wetterdaten ein!");
             dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"wetterdaten/dd.sql");
             dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"wetterdaten/dm.sql");
         }
 
-        if (   ! tablelist.contains("geodb_type_names") && ! tablelist.contains("geodb_locations")
-            && ! tablelist.contains("geodb_hierarchies") && ! tablelist.contains("geodb_coordinates")
-            && ! tablelist.contains("geodb_textdata") && ! tablelist.contains("geodb_intdata")
-            && ! tablelist.contains("geodb_floatdata") && ! tablelist.contains("geodb_changelog"))
+        if (   !connection.tableExist("geodb_type_names") || !connection.tableExist("geodb_locations")
+            || !connection.tableExist("geodb_hierarchies") || !connection.tableExist("geodb_coordinates")
+            || !connection.tableExist("geodb_textdata") || !connection.tableExist("geodb_intdata")
+            || !connection.tableExist("geodb_floatdata") || !connection.tableExist("geodb_changelog"))
         {
             System.out.println("Lese Geodaten ein!");
 
