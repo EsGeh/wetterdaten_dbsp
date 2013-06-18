@@ -126,11 +126,12 @@ public class InstallDBs {
                     "station_id int NOT NULL," +
                     "stadt_id int NOT NULL," +
                     "distance double precision," +
-                    "PRIMARY KEY(station_id,stadt_id)" +
-                    //"FOREIGN KEY(station_id)," +
-                    //"FOREIGN KEY(stadt_id)" +
+                    "PRIMARY KEY(station_id,stadt_id)," +
+                    "FOREIGN KEY(station_id) REFERENCES dbsp_wetterstation(station_id)," +
+                    "FOREIGN KEY(stadt_id) REFERENCES dbsp_stadt(stadt_id)" +
                     ")" +
                     ";");
+            //connection
         }
         catch(SQLException e){
             System.out.println("dbsp_relevantfor konnte nicht erstellt werden! "+e.getMessage());

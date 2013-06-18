@@ -14,8 +14,9 @@ public class WeatherForCity {
 	{
 		PrintStream out = System.out;
 		String stadt_name = askUserForCity();
+		CityInfo cityInfo = null;
 		try {
-			CityInfo cityInfo = lookUpCity(stadt_name);
+			cityInfo = lookUpCity(stadt_name);
 			if( cityInfo == null)
 			{
 				out.println("city not found!");
@@ -25,7 +26,6 @@ public class WeatherForCity {
 		catch(SQLException e) {
 			out.println("ERROR: looking up city failed: " + e.getMessage());
 		}
-			
 	}
 	private String askUserForCity() {
 		PrintStream out = System.out;
