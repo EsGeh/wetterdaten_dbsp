@@ -56,24 +56,39 @@ public class SQLConnection {
 			}
 		}
 	}
-	public List<String> getExistingTables()
+	// test if a table exists in the schema, by trying to read from it (hacky, but quiet reliable):
+	public boolean tableExist(String tableName)
 	{
-		List<String> result = new ArrayList<String>();
 		try
 		{
+			query(queryTestIfTableExists);
+			return true;
+		}
+		catch(Exception e)
+		{
+			return false;
+		}
+	}
+	/*public List<String> getExistingTables()
+	{
+		try
+		{
+			List<String> result = new ArrayList<String>();
 	        DatabaseMetaData meta = connection.getMetaData();
 	        ResultSet tables = meta.getTables(null, null, null, new String[] { "TABLES" } );
 	        while( tables.next() )
 	        {
 	        	result.add( tables.getString("TABLE_NAME") );
 	        }
+	        tables.close();
+	        return result;
 		}
 		catch( Exception e)
 		{
 			System.out.println("ERROR: exception: " + e.getMessage());
 		}
-		return result;
-	}
+		return null;
+	}*/
 	// use non-prepared statements:
 	public ResultSet query(String sqlQuery)
 	{
@@ -104,6 +119,12 @@ public class SQLConnection {
 		}
 	}
 	private Connection connection;
+	private static final String queryTestIfTableExists =
+			"select count(*)\n" +
+			"from ?\n" +
+			"limit 1\n" +
+			";"
+		;
 	public class CouldNotLoadDriverException extends Exception {
 		public CouldNotLoadDriverException(String msg)
 		{
