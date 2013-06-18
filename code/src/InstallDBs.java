@@ -73,7 +73,7 @@ public class InstallDBs {
         }
         //erstelle den wetterstationview
         try {
-            connection.update("create or replace view dbsp_wetterstation\n" +
+            connection.update("create or replace view dbsp_wetterstation_view\n" +
                             "as\n" +
                             "select s_id as station_id, geo_laenge as laenge, geo_breite as breite\n" +
                             "from wetterstation\n" +
@@ -84,7 +84,7 @@ public class InstallDBs {
         }
         //erstelle den wettervermessungview
         try {
-            connection.update("create or replace view dbsp_wettermessung\n" +
+            connection.update("create or replace view dbsp_wettermessung_view\n" +
                     "\t\tas\n" +
                     "\t\tselect stations_id as station_id, datum, qualitaet, min_5cm, min_2m, mittel_2m, max_2m, relative_feuchte, mittel_windstaerke, max_windgeschwindigkeit, sonnenscheindauer, mittel_bedeckungsgrad, niederschlagshoehe, mittel_luftdruck\n" +
                     "\t\tfrom wettermessung\n" +
@@ -95,7 +95,7 @@ public class InstallDBs {
         }
         //erstelle den stadtview
         try {
-            connection.update("create or replace view dbsp_stadt\n" +
+            connection.update("create or replace view dbsp_stadt_view\n" +
                     "\t\t\tas\n" +
                     "\t\t\tselect loc.loc_id as stadt_id, text.text_val as name, coord.lon as laenge, coord.lat as breite\n" +
                     "\t\t\tfrom geodb_locations as loc\n" +
@@ -109,15 +109,28 @@ public class InstallDBs {
             System.out.println("dbsp_stadt view konnte nicht erzeugt werden: "+e.getMessage());
         }
 
+        try {
+            connection.update("select * into dbsp_wetterstation from dbsp_wetterstation_view;");
+            connection.update("select * into dbsp_wettermessung from dbsp_wettermessung_view;");
+            connection.update("select * into dbsp_stadt from dbsp_stadt_view;");
+        }
+        catch(SQLException e){
+            System.out.println("tables aus views konnten nicht erstellt werden:"+e.getMessage());
+        }
+
+
+
         //erstelle die Kreuzprodukttabelle
         try {
-            connection.update("create table dbsp_relevant(" +
+            connection.update("create table dbsp_relevantfor(" +
                     "station_id int NOT NULL," +
                     "stadt_id int NOT NULL," +
                     "distance double precision NOT NULL," +
-                    "PRIMARY KEY(station_id,stadt_id)," +
-                    "FOREIGN KEY(station_id)," +
-                    "FOREIGN KEY(stadt_id));");
+                    "PRIMARY KEY(station_id,stadt_id)" +
+                    //"FOREIGN KEY(station_id)," +
+                    //"FOREIGN KEY(stadt_id)" +
+                    ")" +
+                    ";");
         }
         catch(SQLException e){
             System.out.println("dbsp_relevantfor konnte nicht erstellt werden! "+e.getMessage());
