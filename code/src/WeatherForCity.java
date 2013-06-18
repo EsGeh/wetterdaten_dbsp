@@ -12,23 +12,20 @@ public class WeatherForCity {
 	
 	public void exec()
 	{
-		PrintStream out = System.out;
+		/*PrintStream out = System.out;
 		String stadt_name = askUserForCity();
 		try {
-			ResultSet set = lookUpCity(stadt_name);
-			if( !set.next() )
+			CityInfo cityInfo = lookUpCity(stadt_name);
+			if( cityInfo == null)
 			{
 				out.println("city not found!");
 				return;
 			}
-			int stadt_id = set.getInt("stadt_id");
-			//String stadt_name = set.getString("name");
-			double stadt_laenge = set.getDouble("laenge");
-			double stadt_breite = set.getDouble("breite");
-			//out.println("city lookup succeeded: " + set.getInt("stadt_id"));
-		} catch( SQLException e) {
-			out.println("ERROR: unable to look up city: " + e.getMessage());
 		}
+		catch(SQLException e) {
+			out.println("ERROR: looking up city failed: " + e.getMessage());
+		}*/
+			
 	}
 	private String askUserForCity() {
 		PrintStream out = System.out;
@@ -36,8 +33,25 @@ public class WeatherForCity {
 		out.print("please enter a city:\n\t");
 		return in.next().trim();
 	}
-	private ResultSet lookUpCity(String cityName) throws SQLException {
-		ResultSet townSet = lookupWithOneVariable(queryToGetTown, cityName);
+	// returns null, if city not found in database.
+	// throws an exception, if the query failed.
+	private CityInfo lookUpCity(String cityName) throws SQLException {
+		CityInfo result = new CityInfo();
+		try {
+			ResultSet townSet = lookupWithOneVariable(queryToGetTown, cityName);
+			if( !townSet.next() )
+			{
+				return null;
+			}
+			result = new CityInfo();
+			result.name = townSet.getString("name");
+			result.laenge = townSet.getDouble("laenge");
+			result.breite = townSet.getDouble("breite");
+			return result;
+		} catch( SQLException e) {
+			throw e;
+			//out.println("ERROR: unable to look up city: " + e.getMessage());
+		}
 	}
 	private ResultSet lookupWithOneVariable(String query, String var) throws SQLException
 	{
@@ -57,6 +71,23 @@ public class WeatherForCity {
 			throw e;
 		}
 	}
+	private class CityInfo
+	{
+		public CityInfo()
+		{
+			this.name = "";
+			this.laenge = -1;
+			this.breite = -1;
+		}
+		public CityInfo(String name, double laenge , double breite ) {
+			this.name = name;
+			this.laenge = laenge;
+			this.breite = breite;
+		}
+		public String name;
+		public double laenge;
+		public double breite;
+	}
 	private SQLConnection connection;
 	private static final String queryPossibleTowns =
 		"SELECT count(*)\n" +
@@ -65,7 +96,8 @@ public class WeatherForCity {
 		";"
 	;
 	private static final String queryToGetTown =
-		"SELECT *\n" + "FROM dbsp_stadt \n" +
+		"SELECT *\n" + "FROM dbsp_stadt:w" +
+				" \n" +
 		"WHERE ? LIKE name\n" +
 		";"
 	;
