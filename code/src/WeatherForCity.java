@@ -16,7 +16,7 @@ public class WeatherForCity {
 		String cityName = getCityName();
 		try {
 			ResultSet set = lookUpCity(cityName);
-			if( set.first() )
+			if( set.next() )
 				out.println("city lookup succeeded!");
 		} catch( SQLException e) {
 			out.println("ERROR: unable to look up city: " + e.getMessage());
@@ -43,7 +43,8 @@ public class WeatherForCity {
 		try
 		{
 			stmt.setString( 1, cityName );
-			return stmt.executeQuery();
+			ResultSet set = stmt.executeQuery();
+			return set;
 		}
 		catch(SQLException e)
 		{
@@ -51,6 +52,12 @@ public class WeatherForCity {
 		}
 	}
 	private SQLConnection connection;
+	private static final String queryPossibleTowns =
+		"SELECT count(*)\n" +
+		"FROM dbsp_stadt\n" +
+		"WHERE ? LIKE name\n" +
+		";"
+	;
 	private static final String queryToGetTown =
 		"SELECT stadt_id, laenge, breite\n" + "FROM dbsp_stadt \n" +
 		"WHERE ? LIKE name\n" +
