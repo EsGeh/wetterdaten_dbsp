@@ -176,14 +176,7 @@ public class InstallDBs {
     }
 
     public void dynamicimport(SQLConnection connection,
-                              String path,"Insert into " +
-                                      "dbsp_relevantfor (station_id,stadt_id) values\n" +
-                                      "select station_id, stadt_id\n" +
-                                      "from dbsp_wetterstation\n" +
-                                      "CROSS JOIN\n" +
-                                      "dbsp_stadt\n" +
-                                  ");"
-                              );
+                              String path,
                               String serverURL,
                               String serverPort,
                               String databaseName,
