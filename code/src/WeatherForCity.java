@@ -12,7 +12,7 @@ public class WeatherForCity {
 	
 	public void exec()
 	{
-		/*PrintStream out = System.out;
+		PrintStream out = System.out;
 		String stadt_name = askUserForCity();
 		try {
 			CityInfo cityInfo = lookUpCity(stadt_name);
@@ -24,7 +24,7 @@ public class WeatherForCity {
 		}
 		catch(SQLException e) {
 			out.println("ERROR: looking up city failed: " + e.getMessage());
-		}*/
+		}
 			
 	}
 	private String askUserForCity() {
@@ -96,8 +96,8 @@ public class WeatherForCity {
 		";"
 	;
 	private static final String queryToGetTown =
-		"SELECT *\n" + "FROM dbsp_stadt:w" +
-				" \n" +
+		"SELECT *\n" + 
+		"FROM dbsp_stadt\n" +
 		"WHERE ? LIKE name\n" +
 		";"
 	;
