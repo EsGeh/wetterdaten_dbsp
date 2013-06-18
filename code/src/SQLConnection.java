@@ -33,7 +33,7 @@ public class SQLConnection {
 			props.setProperty("user", userName ); 
 			props.setProperty("password", password );
 			//props.setProperty("ssl", "true");
-			DriverManager.getConnection(
+			connection = DriverManager.getConnection(
 					//"jdbc:postgresql://" + serverURL + ":" + serverPort + "/" + databaseName,
 					"jdbc:postgresql://" + serverURL + "/" + databaseName,
 					props
@@ -92,16 +92,15 @@ public class SQLConnection {
 	 * a PreparedStatement can contain variables, set them using PreparedStatement.set<Typ>()
 	 * execute them using PreparedStatement.executeQuery()
 	 */
-	public PreparedStatement prepareStmt(String sqlQueryWithVariables)
+	public PreparedStatement prepareStmt(String sqlQueryWithVariables) throws SQLException
 	{
 		try
 		{
 			return connection.prepareStatement(sqlQueryWithVariables);
 		}
-		catch(Exception e)
+		catch(SQLException e)
 		{
-			// todo: throw exception
-			return null;
+			throw e;
 		}
 	}
 	private Connection connection;

@@ -1,4 +1,7 @@
 import java.io.PrintStream;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Scanner;
 
 
@@ -9,9 +12,15 @@ public class WeatherForCity {
 	
 	public void exec()
 	{
+		PrintStream out = System.out;
 		String cityName = getCityName();
-		lookUpCity(cityName);
-		/* ... to do */
+		try {
+			ResultSet set = lookUpCity(cityName);
+			if( set.first() )
+				out.println("city lookup succeeded!");
+		} catch( SQLException e) {
+			out.println("ERROR: unable to look up city: " + e.getMessage());
+		}
 	}
 	private String getCityName() {
 		PrintStream out = System.out;
@@ -19,8 +28,32 @@ public class WeatherForCity {
 		out.print("please enter a city:\n\t");
 		return in.next();
 	}
-	private void lookUpCity(String cityName) {
-		/* todo */
+	private ResultSet lookUpCity(String cityName) throws SQLException {
+		PreparedStatement stmt = null;
+		try
+		{
+			stmt = connection.prepareStmt(
+					queryToGetTown
+			);
+		}
+		catch(SQLException e)
+		{
+			throw e;
+		}
+		try
+		{
+			stmt.setString( 1, cityName );
+			return stmt.executeQuery();
+		}
+		catch(SQLException e)
+		{
+			throw e;
+		}
 	}
 	private SQLConnection connection;
+	private static final String queryToGetTown =
+		"SELECT stadt_id, laenge, breite\n" + "FROM dbsp_stadt \n" +
+		"WHERE ? LIKE name\n" +
+		";"
+	;
 }

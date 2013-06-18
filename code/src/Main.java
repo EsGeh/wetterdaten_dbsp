@@ -27,7 +27,7 @@ public class Main {
 		}
 		catch( SQLConnection.CouldNotLoadDriverException e)
 		{
-			System.out.println("ERROR: could not load the jdbc - SQL - Driver!" + e.getMessage());
+			System.out.println("ERROR: could not load the jdbc - SQL - Driver!");
 			System.exit(0);
 		}
 		catch( SQLConnection.DatabaseConnectionException e)
