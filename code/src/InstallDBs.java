@@ -24,7 +24,7 @@ public class InstallDBs {
             System.out.println("current:"+current);
         }*/
 
-        if (!connection.tableExist("Wetterstation") || !connection.tableExist("Wettermessung"))
+        if (!connection.tableExist("WETTERSTATION") || !connection.tableExist("WETTERMESSUNG"))
         {
         	System.out.println("Lese Wetterdaten ein!");
             dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"wetterdaten/dd.sql");

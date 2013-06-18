@@ -61,11 +61,21 @@ public class SQLConnection {
 	{
 		try
 		{
-			query(queryTestIfTableExists);
+			query(
+				"select count(*)\n" +
+				"from " + tableName + "\n" +
+				"limit 1\n" +
+				";"
+			);
+			/*PreparedStatement stmt = prepareStmt(
+			);
+			stmt.setString(1, tableName);
+			stmt.executeQuery();*/
 			return true;
 		}
 		catch(Exception e)
 		{
+			System.out.println("Scheiß-Exception: " + e.getMessage());
 			return false;
 		}
 	}
@@ -90,17 +100,16 @@ public class SQLConnection {
 		return null;
 	}*/
 	// use non-prepared statements:
-	public ResultSet query(String sqlQuery)
+	public ResultSet query(String sqlQuery) throws SQLException
 	{
 		try
 		{
 			Statement stmt = connection.createStatement();
 			return stmt.executeQuery(sqlQuery);
 		}
-		catch(Exception e)
+		catch(SQLException e)
 		{
-			// todo: throw exception
-			return null;
+			throw e;
 		}
 	}
 	/* prepare a prepared statment.

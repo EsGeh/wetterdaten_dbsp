@@ -33,7 +33,7 @@ public class WeatherForCity {
 		try
 		{
 			stmt = connection.prepareStmt(
-					queryToGetTown
+					queryPossibleTowns
 			);
 		}
 		catch(SQLException e)
