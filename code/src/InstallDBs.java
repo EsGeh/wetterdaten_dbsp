@@ -157,11 +157,16 @@ public class InstallDBs {
 
         //füge die kreuzproduktinhalte ein
         try {
-            connection.update("Insert into " +
-                    "dbsp_relevantfor (station_id,stadt_id) values " +
-                    "((select station_id from dbsp_wetterstation)" +
-                    "CROSS JOIN " +
-                    "(select stadt_id from dbsp_stadt));");
+            connection.update(
+            	"Insert into\n" +
+                "dbsp_relevantfor\n" +
+                "(station_id, stadt_id)\n" +
+                    "select station_id, stadt_id\n" +
+                    "from (dbsp_wetterstation\n" +
+                    "CROSS JOIN\n" +
+                    "dbsp_stadt )\n" +
+                ";"
+            );
 
         }
         catch(SQLException e){
@@ -170,9 +175,15 @@ public class InstallDBs {
         }
     }
 
-
     public void dynamicimport(SQLConnection connection,
-                              String path,
+                              String path,"Insert into " +
+                                      "dbsp_relevantfor (station_id,stadt_id) values\n" +
+                                      "select station_id, stadt_id\n" +
+                                      "from dbsp_wetterstation\n" +
+                                      "CROSS JOIN\n" +
+                                      "dbsp_stadt\n" +
+                                  ");"
+                              );
                               String serverURL,
                               String serverPort,
                               String databaseName,
