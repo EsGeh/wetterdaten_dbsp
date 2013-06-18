@@ -125,17 +125,33 @@ public class InstallDBs {
             connection.update("create table dbsp_relevantfor(" +
                     "station_id int NOT NULL," +
                     "stadt_id int NOT NULL," +
-                    "distance double precision NOT NULL," +
+                    "distance double precision," +
                     "PRIMARY KEY(station_id,stadt_id)," +
                     "FOREIGN KEY(station_id) REFERENCES dbsp_wetterstation(station_id)," +
                     "FOREIGN KEY(stadt_id) REFERENCES dbsp_stadt(stadt_id)" +
                     ")" +
                     ";");
-            //connection
+
         }
         catch(SQLException e){
             System.out.println("dbsp_relevantfor konnte nicht erstellt werden! "+e.getMessage());
         }
+
+        //füge die kreuzproduktinhalte ein
+        try {
+            connection.update("Insert into " +
+                    "dbsp_relevantfor (station_id,stadt_id) values " +
+                    "((select station_id from dbsp_wetterstation)" +
+                    "CROSS JOIN " +
+                    "(select stadt_id from dbsp_stadt));");
+
+        }
+        catch(SQLException e){
+            System.out.println("kreuzproduktwerte konnten nicht erstellt werden! "+e.getMessage());
+        }
+
+
+
     }
 
 
