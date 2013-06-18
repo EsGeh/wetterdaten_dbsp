@@ -1,4 +1,5 @@
 import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Scanner;
 import java.io.*;
@@ -70,7 +71,59 @@ public class InstallDBs {
             dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"opengeodb/DE2.sql");
             dynamicimport(connection,path, serverURL,serverPort,databaseName,userName,password,"opengeodb/opengeodb-end.sql");
         }
+        //erstelle den wetterstationview
+        try {
+            connection.update("create or replace view dbsp_wetterstation\n" +
+                            "as\n" +
+                            "select s_id as station_id, geo_laenge as laenge, geo_breite as breite\n" +
+                            "from wetterstation\n" +
+                            ";");
+        }
+        catch(SQLException e){
+            System.out.println("dbsp_wetterstation view konnte nicht erzeugt werden: "+e.getMessage());
+        }
+        //erstelle den wettervermessungview
+        try {
+            connection.update("create or replace view dbsp_wettermessung\n" +
+                    "\t\tas\n" +
+                    "\t\tselect stations_id as station_id, datum, qualitaet, min_5cm, min_2m, mittel_2m, max_2m, relative_feuchte, mittel_windstaerke, max_windgeschwindigkeit, sonnenscheindauer, mittel_bedeckungsgrad, niederschlagshoehe, mittel_luftdruck\n" +
+                    "\t\tfrom wettermessung\n" +
+                    "\t\t;");
+        }
+        catch(SQLException e){
+            System.out.println("dbsp_wettermessung view konnte nicht erzeugt werden: "+e.getMessage());
+        }
+        //erstelle den stadtview
+        try {
+            connection.update("create or replace view dbsp_stadt\n" +
+                    "\t\t\tas\n" +
+                    "\t\t\tselect loc.loc_id as stadt_id, text.text_val as name, coord.lon as laenge, coord.lat as breite\n" +
+                    "\t\t\tfrom geodb_locations as loc\n" +
+                    "\t\t\tjoin geodb_textdata as text on text.loc_id = loc.loc_id\n" +
+                    "\t\t\tjoin geodb_coordinates as coord on coord.loc_id = loc.loc_id\n" +
+                    "\t\t\twhere loc.loc_type = 100600000 /* typ: Politische Gliederung */\n" +
+                    "\t\t\tand text.text_type = 500100000 /* der name der location*/\n" +
+                    "\t\t\t;");
+        }
+        catch(SQLException e){
+            System.out.println("dbsp_stadt view konnte nicht erzeugt werden: "+e.getMessage());
+        }
+
+        //erstelle die Kreuzprodukttabelle
+        try {
+            connection.update("create table dbsp_relevant(" +
+                    "station_id int NOT NULL," +
+                    "stadt_id int NOT NULL," +
+                    "distance double precision NOT NULL," +
+                    "PRIMARY KEY(station_id,stadt_id)," +
+                    "FOREIGN KEY(station_id)," +
+                    "FOREIGN KEY(stadt_id));");
+        }
+        catch(SQLException e){
+            System.out.println("dbsp_relevantfor konnte nicht erstellt werden! "+e.getMessage());
+        }
     }
+
 
     public void dynamicimport(SQLConnection connection,
                               String path,
