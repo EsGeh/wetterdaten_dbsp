@@ -1,4 +1,6 @@
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Scanner;
@@ -168,6 +170,60 @@ public class InstallDBs {
                 ";"
             );
 
+        }
+        catch(SQLException e){
+            System.out.println("kreuzproduktwerte konnten nicht erstellt werden! "+e.getMessage());
+            System.exit(1);
+        }
+        // berechne die distanzen, und füge sie in die Tabelle dbsp_relevantfor ein:
+        try {
+        	DistanceCalculator calc = new DistanceCalculator();
+            ResultSet resultSet = connection.query(
+            	"select station_id, stadt_id\n" +
+            	"from dbsp_relevantfor\n" +
+            	";",
+            	true
+            );
+            while( resultSet.next())
+            {
+            	int station_id = resultSet.getInt("station_id");
+            	int stadt_id = resultSet.getInt("stadt_id");
+	            double wetterStationLaenge = 0;
+	            double wetterStationBreite = 0;
+	            double stadtLaenge = 0;
+	            double stadtBreite = 0;
+            	{ // wetterstation:
+	            	PreparedStatement stmtWetterStation = connection.prepareStmt(
+	            		"select laenge, breite\n" +
+	            		"from dbsp_wetterstation\n" +
+	            		"where station_id = ?\n" +
+	            		";"
+	            	);
+	            	stmtWetterStation.setInt(1, station_id);
+	            	ResultSet setWetterStation = stmtWetterStation.executeQuery();
+	            	if( !setWetterStation.next()) { out.println("ERROR: couldn't find Wetterstation from id!"); System.exit(1); };
+	            	wetterStationLaenge = setWetterStation.getDouble("laenge");
+	            	wetterStationBreite = setWetterStation.getDouble("breite");
+            	}
+            	{ // Stadt:
+	            	PreparedStatement stmt = connection.prepareStmt(
+	            		"select laenge, breite\n" +
+	            		"from dbsp_stadt\n" +
+	            		"where stadt_id = ?\n" +
+	            		";"
+	            	);
+	            	stmt.setInt(1, station_id);
+	            	ResultSet setWetterStation = stmt.executeQuery();
+	            	if( !setWetterStation.next()) { out.println("ERROR: couldn't find Stadt from id!"); System.exit(1); };
+	            	stadtLaenge = setWetterStation.getDouble("laenge");
+	            	stadtBreite = setWetterStation.getDouble("breite");
+            	}
+            	// berechne den Abstand:
+            	double dist = calc.distance(wetterStationLaenge, wetterStationBreite, stadtLaenge, stadtBreite);
+            	{
+            		resultSet.updateDouble("distance", dist);
+            	}
+            }
         }
         catch(SQLException e){
             System.out.println("kreuzproduktwerte konnten nicht erstellt werden! "+e.getMessage());

@@ -65,13 +65,14 @@ public class SQLConnection {
 				"select count(*)\n" +
 				"from " + tableName + "\n" +
 				"limit 1\n" +
-				";"
+				";",
+				false
 			);
 			return true;
 		}
 		catch(Exception e)
 		{
-			System.out.println("Scheiß-Exception: " + e.getMessage());
+			//System.out.println("Scheiß-Exception: " + e.getMessage());
 			return false;
 		}
 	}
@@ -97,11 +98,15 @@ public class SQLConnection {
 	}*/
 	// use non-prepared statements:
 	// if your query does not have a result set (e.g. CREATE ...), use SQLConnection.update(...) instead
-	public ResultSet query(String sqlQuery) throws SQLException
+	public ResultSet query(String sqlQuery, boolean updatable ) throws SQLException
 	{
 		try
 		{
-			Statement stmt = connection.createStatement();
+			Statement stmt = null;
+			if( ! updatable )
+				stmt = connection.createStatement();
+			else
+				stmt = connection.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
 			return stmt.executeQuery(sqlQuery);
 		}
 		catch(SQLException e)
