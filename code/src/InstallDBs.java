@@ -114,124 +114,130 @@ public class InstallDBs {
             System.exit(1);
         }
 
-        try {
-            connection.update("select * into dbsp_wetterstation from dbsp_wetterstation_view;");
-            connection.update("select * into dbsp_wettermessung from dbsp_wettermessung_view;");
-            connection.update("select * into dbsp_stadt from dbsp_stadt_view;");
-        }
-        catch(SQLException e){
-            System.out.println("ERROR: tables aus views konnten nicht erstellt werden: "+e.getMessage());
-            System.exit(1);
-        }
-        // erstelle constraints, für die aus den Views erzeugten Tabellen:
-        try {
-        	connection.update(
-        		"ALTER TABLE dbsp_wetterstation\n" +
-        		"ADD PRIMARY KEY (station_id) ;"
-        	);
-        	connection.update(
-        		"ALTER TABLE dbsp_stadt\n" +
-        		"ADD PRIMARY KEY (stadt_id) ;"
-        	);
-        }
-        catch(SQLException e){
-            System.out.println("ERROR: Die Notwendigen Konstraints konnten nicht erstellt werden: "+e.getMessage());
-            System.exit(1);
-        }
-
-        //erstelle die Kreuzprodukttabelle
-        try {
-            connection.update("create table dbsp_relevantfor(" +
-                    "station_id int NOT NULL," +
-                    "stadt_id int NOT NULL," +
-                    "distance double precision," +
-                    "PRIMARY KEY(station_id,stadt_id)," +
-                    "FOREIGN KEY(station_id) REFERENCES dbsp_wetterstation(station_id)," +
-                    "FOREIGN KEY(stadt_id) REFERENCES dbsp_stadt(stadt_id)" +
-                    ")" +
-                    ";");
-
-        }
-        catch(SQLException e){
-            System.out.println("ERROR: dbsp_relevantfor konnte nicht erstellt werden: "+e.getMessage());
-            System.exit(1);
+    	if( !connection.tableExist("dbsp_wetterstation") || !connection.tableExist("dbsp_wettermessung") || !connection.tableExist("dbsp_stadt") )
+        {
+	        try {
+		            connection.update("select * into dbsp_wetterstation from dbsp_wetterstation_view;");
+		            connection.update("select * into dbsp_wettermessung from dbsp_wettermessung_view;");
+		            connection.update("select * into dbsp_stadt from dbsp_stadt_view;");
+	        }
+	        catch(SQLException e) {
+	            System.out.println("ERROR: tables aus views konnten nicht erstellt werden: "+e.getMessage());
+	            System.exit(1);
+	        }
+	        // erstelle constraints, für die aus den Views erzeugten Tabellen:
+	        try {
+	        	connection.update(
+	        		"ALTER TABLE dbsp_wetterstation\n" +
+	        		"ADD PRIMARY KEY (station_id) ;"
+	        	);
+	        	connection.update(
+	        		"ALTER TABLE dbsp_stadt\n" +
+	        		"ADD PRIMARY KEY (stadt_id) ;"
+	        	);
+	        }
+	        catch(SQLException e){
+	            System.out.println("ERROR: Die Notwendigen Konstraints konnten nicht erstellt werden: "+e.getMessage());
+	            System.exit(1);
+	        }
         }
 
-        //füge die kreuzproduktinhalte ein
-        try {
-        	out.println("INFO: die Relationen zwischen Wetterstationen und Städten werden erstellt...");
-            connection.update(
-            	"Insert into\n" +
-                "dbsp_relevantfor\n" +
-                "(station_id, stadt_id)\n" +
-                    "select station_id, stadt_id\n" +
-                    "from (dbsp_wetterstation\n" +
-                    "CROSS JOIN\n" +
-                    "dbsp_stadt )\n" +
-                ";"
-            );
-
-        }
-        catch(SQLException e){
-            System.out.println("ERROR: Relation zwischen Wetterstationen und Städten konnte nicht erstellt werden! "+e.getMessage());
-            System.exit(1);
-        }
-        // berechne die distanzen, und füge sie in die Tabelle dbsp_relevantfor ein:
-        try {
-        	out.println("INFO: die Distanzen werden berechnet und eingefügt...");
-        	DistanceCalculator calc = new DistanceCalculator();
-            ResultSet resultSet = connection.query(
-            	"select station_id, stadt_id, distance\n" +
-            	"from dbsp_relevantfor\n" +
-            	";",
-            	true
-            );
-            while( resultSet.next())
-            {
-            	int station_id = resultSet.getInt("station_id");
-            	int stadt_id = resultSet.getInt("stadt_id");
-	            double wetterStationLaenge = 0;
-	            double wetterStationBreite = 0;
-	            double stadtLaenge = 0;
-	            double stadtBreite = 0;
-            	{ // wetterstation:
-	            	PreparedStatement stmtWetterStation = connection.prepareStmt(
-	            		"select laenge, breite\n" +
-	            		"from dbsp_wetterstation\n" +
-	            		"where station_id = ?\n" +
-	            		";"
-	            	);
-	            	stmtWetterStation.setInt(1, station_id);
-	            	ResultSet setWetterStation = stmtWetterStation.executeQuery();
-	            	if( !setWetterStation.next()) { out.println("ERROR: couldn't find Wetterstation from id!"); System.exit(1); };
-	            	wetterStationLaenge = setWetterStation.getDouble("laenge");
-	            	wetterStationBreite = setWetterStation.getDouble("breite");
-            	}
-            	{ // Stadt:
-	            	PreparedStatement stmt = connection.prepareStmt(
-	            		"select laenge, breite\n" +
-	            		"from dbsp_stadt\n" +
-	            		"where stadt_id = ?\n" +
-	            		";"
-	            	);
-	            	stmt.setInt(1, stadt_id);
-	            	ResultSet setWetterStation = stmt.executeQuery();
-	            	if( !setWetterStation.next()) { out.println("ERROR: couldn't find Stadt from id!"); System.exit(1); };
-	            	stadtLaenge = setWetterStation.getDouble("laenge");
-	            	stadtBreite = setWetterStation.getDouble("breite");
-            	}
-            	// berechne den Abstand:
-            	double dist = calc.distance(wetterStationLaenge, wetterStationBreite, stadtLaenge, stadtBreite);
-            	{
-            		resultSet.updateDouble("distance", dist);
-            		resultSet.updateRow();
-            	}
-            }
-        }
-        catch(SQLException e){
-            System.out.println("ERROR: Distanzen konnten nicht eingefügt werden: "+e.getMessage());
-            System.exit(1);
-        }
+    	if( ! connection.tableExist("dbsp_relevantfor") )
+    	{
+	        //erstelle die Kreuzprodukttabelle
+	        try {
+	            connection.update("create table dbsp_relevantfor(" +
+	                    "station_id int NOT NULL," +
+	                    "stadt_id int NOT NULL," +
+	                    "distance double precision," +
+	                    "PRIMARY KEY(station_id,stadt_id)," +
+	                    "FOREIGN KEY(station_id) REFERENCES dbsp_wetterstation(station_id)," +
+	                    "FOREIGN KEY(stadt_id) REFERENCES dbsp_stadt(stadt_id)" +
+	                    ")" +
+	                    ";");
+	
+	        }
+	        catch(SQLException e){
+	            System.out.println("ERROR: dbsp_relevantfor konnte nicht erstellt werden: "+e.getMessage());
+	            System.exit(1);
+	        }
+	
+	        //füge die kreuzproduktinhalte ein
+	        try {
+	        	out.println("INFO: die Relationen zwischen Wetterstationen und Städten werden erstellt...");
+	            connection.update(
+	            	"Insert into\n" +
+	                "dbsp_relevantfor\n" +
+	                "(station_id, stadt_id)\n" +
+	                    "select station_id, stadt_id\n" +
+	                    "from (dbsp_wetterstation\n" +
+	                    "CROSS JOIN\n" +
+	                    "dbsp_stadt )\n" +
+	                ";"
+	            );
+	
+	        }
+	        catch(SQLException e){
+	            System.out.println("ERROR: Relation zwischen Wetterstationen und Städten konnte nicht erstellt werden! "+e.getMessage());
+	            System.exit(1);
+	        }
+	        // berechne die distanzen, und füge sie in die Tabelle dbsp_relevantfor ein:
+	        try {
+	        	out.println("INFO: die Distanzen werden berechnet und eingefügt...");
+	        	DistanceCalculator calc = new DistanceCalculator();
+	            ResultSet resultSet = connection.query(
+	            	"select station_id, stadt_id, distance\n" +
+	            	"from dbsp_relevantfor\n" +
+	            	";",
+	            	true
+	            );
+	            while( resultSet.next())
+	            {
+	            	int station_id = resultSet.getInt("station_id");
+	            	int stadt_id = resultSet.getInt("stadt_id");
+		            double wetterStationLaenge = 0;
+		            double wetterStationBreite = 0;
+		            double stadtLaenge = 0;
+		            double stadtBreite = 0;
+	            	{ // wetterstation:
+		            	PreparedStatement stmtWetterStation = connection.prepareStmt(
+		            		"select laenge, breite\n" +
+		            		"from dbsp_wetterstation\n" +
+		            		"where station_id = ?\n" +
+		            		";"
+		            	);
+		            	stmtWetterStation.setInt(1, station_id);
+		            	ResultSet setWetterStation = stmtWetterStation.executeQuery();
+		            	if( !setWetterStation.next()) { out.println("ERROR: couldn't find Wetterstation from id!"); System.exit(1); };
+		            	wetterStationLaenge = setWetterStation.getDouble("laenge");
+		            	wetterStationBreite = setWetterStation.getDouble("breite");
+	            	}
+	            	{ // Stadt:
+		            	PreparedStatement stmt = connection.prepareStmt(
+		            		"select laenge, breite\n" +
+		            		"from dbsp_stadt\n" +
+		            		"where stadt_id = ?\n" +
+		            		";"
+		            	);
+		            	stmt.setInt(1, stadt_id);
+		            	ResultSet setWetterStation = stmt.executeQuery();
+		            	if( !setWetterStation.next()) { out.println("ERROR: couldn't find Stadt from id!"); System.exit(1); };
+		            	stadtLaenge = setWetterStation.getDouble("laenge");
+		            	stadtBreite = setWetterStation.getDouble("breite");
+	            	}
+	            	// berechne den Abstand:
+	            	double dist = calc.distance(wetterStationLaenge, wetterStationBreite, stadtLaenge, stadtBreite);
+	            	{
+	            		resultSet.updateDouble("distance", dist);
+	            		resultSet.updateRow();
+	            	}
+	            }
+	        }
+	        catch(SQLException e){
+	            System.out.println("ERROR: Distanzen konnten nicht eingefügt werden: "+e.getMessage());
+	            System.exit(1);
+	        }
+    	}
     }
 
     public void dynamicimport(SQLConnection connection,
