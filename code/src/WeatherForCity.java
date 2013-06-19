@@ -17,7 +17,6 @@ public class WeatherForCity {
 	{
 		PrintStream out = System.out;
 		String stadt_name = askUserForCity();
-		Date date = askUserForDate();
 		CityInfo cityInfo = null;
 		try {
 			cityInfo = lookUpCity(stadt_name);
@@ -26,12 +25,35 @@ public class WeatherForCity {
 				out.println("city not found!");
 				return;
 			}
-			int station_id = lookupNextStation(cityInfo);
-			MessungInfo messung = lookupMessung(station_id,date);
+			
 		}
 		catch(SQLException e) {
 			out.println("ERROR: looking up city failed: " + e.getMessage());
 		}
+		Date date = null;
+		int station_id = -1;
+		try {
+			date = askUserForDate();
+			//System.out.println("eingegebenes Datum: " + date.toString());
+			station_id = lookupNextStation(cityInfo);
+		}
+		catch(SQLException e) {
+			out.println("ERROR: failed while searching for a wetterstation: " + e.getMessage());
+		}
+		
+		MessungInfo messung = null;
+		try {
+			messung = lookupMessung(station_id,date);
+			if( messung == null)
+			{
+				out.println("keine Entsprechende Messung gefunden!");
+				System.exit(0);
+			}
+		}
+		catch(SQLException e) {
+			out.println("ERROR: failed while searching for wetterdaten: " + e.getMessage());
+		}
+		printMessung(messung);
 	}
 	private String askUserForCity() {
 		PrintStream out = System.out;
@@ -40,10 +62,10 @@ public class WeatherForCity {
 		return in.next().trim();
 	}
 	private Date askUserForDate() {
-		DateFormat format = new SimpleDateFormat("yy/mm/yyyy");
+		DateFormat format = new SimpleDateFormat("dd/MM/yyyy");
 		PrintStream out = System.out;
-		Scanner in = new Scanner(System.in).useDelimiter("\n");
-		out.print("please enter a date (format: yy/mm/yyyy):\n\t");
+		Scanner in = new Scanner(System.in); //.useDelimiter("\n");
+		out.print("please enter a date (format: dd/mm/yyyy):\n\t");
 		while(true)
 		{
 			try {
@@ -76,14 +98,27 @@ public class WeatherForCity {
 			//out.println("ERROR: unable to look up city: " + e.getMessage());
 		}
 	}
+	private void printMessung(MessungInfo messung)
+	{
+		PrintStream out = System.out;
+		out.println("Das Wetter am " + messung.datum.toString() + ":");
+		out.println("\tTemperatur: " + messung.mittel_2m );
+		out.println("\trel. Luftfeuchtigkeit: " + messung.relative_feuchte );
+		out.println("\tmittlere Windstärke: " + messung.mittel_windstaerke );
+		out.println("\tmax. Windgeschwindigkeit: " + messung.max_windgeschwindigkeit);
+		out.println("\tSonnenscheindauer: " + messung.sonnenscheindauer );
+		out.println("\tmittl. Bedecktheitsgrad: " + messung.mittel_bedeckungsgrad );
+		out.println("\tNiederschlagshöhe: " + messung.niederschlagshoehe );
+		out.println("\tmittl. Luftdruck: " + messung.mittel_luftdruck );
+	}
 	private int lookupNextStation(CityInfo cityInfo) throws SQLException
 	{
 		try
 		{
 			ResultSet set = connection.query(
 				"select *" +
-				"from dbsp_relevantefor\n" +
-				"where stadt_id = " + cityInfo.id + "\n" +
+				"from dbsp_relevantfor\n" +
+				//"where stadt_id = " + cityInfo.id + "\n" +
 				"order by distance ASC\n" +
 				"limit 1\n" +
 				";",
@@ -108,7 +143,7 @@ public class WeatherForCity {
 				"select *" +
 				"from dbsp_wettermessung\n" +
 				"where station_id = " + station_id + "\n" +
-				"order by distance ASC\n" +
+				"order by datum ASC\n" +
 				"limit 1\n" +
 				";",
 				false
@@ -121,35 +156,49 @@ public class WeatherForCity {
 				"select *" +
 				"from dbsp_wettermessung\n" +
 				"where station_id = " + station_id + "\n" +
-				"order by distance DESC\n" +
+				"order by datum DESC\n" +
 				"limit 1\n" +
 				";",
 				false
 			);
 			setMaxDate.next();
-			ResultSet set = connection.query(
+			PreparedStatement stmt = connection.prepareStmt(
 				"select *" +
 				"from dbsp_wettermessung\n" +
 				"where station_id = " + station_id + "\n" +
-				"and datum >= " + date + "\n" +
-				"order by distance ASC\n" +
+				"and datum = ?\n" +
+				"order by datum ASC\n" +
+				"limit 1\n" +
+				";"
+			);
+			java.sql.Date sQLDate = new java.sql.Date(date.getTime());
+			//System.out.println("sqlDatum: " + sQLDate.toString());
+			stmt.setDate(1, sQLDate);
+			ResultSet set = stmt.executeQuery();
+			/*ResultSet set = connection.query(
+				"select *" +
+				"from dbsp_wettermessung\n" +
+				"where station_id = " + station_id + "\n" +
+				"and datum >= " + date.toString() + "\n" +
+				"order by datum ASC\n" +
 				"limit 10\n" +
 				";",
 				false
-			);
+			);*/
 			if( !set.next())
 			{
 				System.out.println("no entries found! the date must be between " +
-						setMinDate.getDate("date") + " and " + 
-						setMaxDate.getDate("date")
+						setMinDate.getDate("datum") + " and " + 
+						setMaxDate.getDate("datum")
 					);
+				return null;
 			}
 			
 			messung.station_id = set.getInt("station_id");
 			messung.datum = set.getDate("datum");
 			messung.qualitaet = set.getInt("qualitaet");
 			messung.min_5cm = set.getDouble("min_5cm");
-			messung.min_2m = set.getDouble("min2m");
+			messung.min_2m = set.getDouble("min_2m");
 			messung.mittel_2m = set.getDouble("mittel_2m");
 			messung.max_2m = set.getDouble("max_2m");
 			messung.relative_feuchte = set.getDouble("relative_feuchte");
