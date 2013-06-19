@@ -159,6 +159,7 @@ public class InstallDBs {
 
         //füge die kreuzproduktinhalte ein
         try {
+        	out.println("INFO: die Relationen zwischen Wetterstationen und Städten werden erstellt...");
             connection.update(
             	"Insert into\n" +
                 "dbsp_relevantfor\n" +
@@ -177,7 +178,7 @@ public class InstallDBs {
         }
         // berechne die distanzen, und füge sie in die Tabelle dbsp_relevantfor ein:
         try {
-        	out.println("INFO: die Distanzen werden berechnet und eingefügt...")
+        	out.println("INFO: die Distanzen werden berechnet und eingefügt...");
         	DistanceCalculator calc = new DistanceCalculator();
             ResultSet resultSet = connection.query(
             	"select station_id, stadt_id, distance\n" +
@@ -223,6 +224,7 @@ public class InstallDBs {
             	double dist = calc.distance(wetterStationLaenge, wetterStationBreite, stadtLaenge, stadtBreite);
             	{
             		resultSet.updateDouble("distance", dist);
+            		resultSet.updateRow();
             	}
             }
         }
