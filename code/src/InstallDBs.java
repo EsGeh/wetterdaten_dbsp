@@ -82,7 +82,7 @@ public class InstallDBs {
                             ";");
         }
         catch(SQLException e){
-            System.out.println("dbsp_wetterstation view konnte nicht erzeugt werden: "+e.getMessage());
+            System.out.println("ERROR: dbsp_wetterstation view konnte nicht erzeugt werden: "+e.getMessage());
             System.exit(1);
         }
         //erstelle den wettervermessungview
@@ -94,7 +94,7 @@ public class InstallDBs {
                     "\t\t;");
         }
         catch(SQLException e){
-            System.out.println("dbsp_wettermessung view konnte nicht erzeugt werden: "+e.getMessage());
+            System.out.println("ERROR: dbsp_wettermessung view konnte nicht erzeugt werden: "+e.getMessage());
             System.exit(1);
         }
         //erstelle den stadtview
@@ -110,7 +110,7 @@ public class InstallDBs {
                     "\t\t\t;");
         }
         catch(SQLException e){
-            System.out.println("dbsp_stadt view konnte nicht erzeugt werden: "+e.getMessage());
+            System.out.println("ERROR: dbsp_stadt view konnte nicht erzeugt werden: "+e.getMessage());
             System.exit(1);
         }
 
@@ -120,7 +120,7 @@ public class InstallDBs {
             connection.update("select * into dbsp_stadt from dbsp_stadt_view;");
         }
         catch(SQLException e){
-            System.out.println("tables aus views konnten nicht erstellt werden:"+e.getMessage());
+            System.out.println("ERROR: tables aus views konnten nicht erstellt werden: "+e.getMessage());
             System.exit(1);
         }
         // erstelle constraints, für die aus den Views erzeugten Tabellen:
@@ -135,7 +135,7 @@ public class InstallDBs {
         	);
         }
         catch(SQLException e){
-            System.out.println("die Notwendigen Konstraints konnten nicht erstellt werden :"+e.getMessage());
+            System.out.println("ERROR: Die Notwendigen Konstraints konnten nicht erstellt werden: "+e.getMessage());
             System.exit(1);
         }
 
@@ -153,7 +153,7 @@ public class InstallDBs {
 
         }
         catch(SQLException e){
-            System.out.println("dbsp_relevantfor konnte nicht erstellt werden! "+e.getMessage());
+            System.out.println("ERROR: dbsp_relevantfor konnte nicht erstellt werden: "+e.getMessage());
             System.exit(1);
         }
 
@@ -172,14 +172,15 @@ public class InstallDBs {
 
         }
         catch(SQLException e){
-            System.out.println("kreuzproduktwerte konnten nicht erstellt werden! "+e.getMessage());
+            System.out.println("ERROR: Relation zwischen Wetterstationen und Städten konnte nicht erstellt werden! "+e.getMessage());
             System.exit(1);
         }
         // berechne die distanzen, und füge sie in die Tabelle dbsp_relevantfor ein:
         try {
+        	out.println("INFO: die Distanzen werden berechnet und eingefügt...")
         	DistanceCalculator calc = new DistanceCalculator();
             ResultSet resultSet = connection.query(
-            	"select station_id, stadt_id\n" +
+            	"select station_id, stadt_id, distance\n" +
             	"from dbsp_relevantfor\n" +
             	";",
             	true
@@ -212,7 +213,7 @@ public class InstallDBs {
 	            		"where stadt_id = ?\n" +
 	            		";"
 	            	);
-	            	stmt.setInt(1, station_id);
+	            	stmt.setInt(1, stadt_id);
 	            	ResultSet setWetterStation = stmt.executeQuery();
 	            	if( !setWetterStation.next()) { out.println("ERROR: couldn't find Stadt from id!"); System.exit(1); };
 	            	stadtLaenge = setWetterStation.getDouble("laenge");
@@ -226,7 +227,7 @@ public class InstallDBs {
             }
         }
         catch(SQLException e){
-            System.out.println("kreuzproduktwerte konnten nicht erstellt werden! "+e.getMessage());
+            System.out.println("ERROR: Distanzen konnten nicht eingefügt werden: "+e.getMessage());
             System.exit(1);
         }
     }
