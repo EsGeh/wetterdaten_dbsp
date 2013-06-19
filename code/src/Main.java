@@ -46,7 +46,7 @@ public class Main {
 			connection.close();
 			System.out.println("INFO: disconnected from database");
 		}
-		catch(SQLConnection.CouldNotCloseException e) { 
+		catch(SQLConnection.CouldNotCloseException e) {
 			System.out.println("ERROR: could not disconnect from database: " + e.getMessage());
 		}
 	}
